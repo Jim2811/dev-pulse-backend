@@ -113,12 +113,46 @@ const updateIssue = async (req: Request, res: Response) => {
         });
     }
 };
+const deleteIssue = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+        const user = (req as any).user
+        if (!user || user.role !== "maintainer") {
+            return sendResponse(res, {
+                statusCode: 403,
+                success: false,
+                message: "Forbidden: Only maintainers can delete issues",
+            });
+        }
+        const result = await issueService.deleteIssueFromDB(id as string)
+        if (result.rowCount === 0) {
+            res.status(404).json({
+                success: false,
+                message: "Issue NOT found"
+            })
+        }
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Issue deleted successfully",
+        });
 
+    } catch (error) {
+        const err = error as Error
+        sendResponse(res, {
+            statusCode: 500,
+            success: false,
+            message: "Failed to Delete Issue",
+            error: err.message,
+        });
+    }
+}
 
 
 export const issuesController = {
     postIssues,
     getAllIssues,
     getSingleIssue,
-    updateIssue
+    updateIssue,
+    deleteIssue
 }
