@@ -3,7 +3,8 @@ import bcrypt from "bcrypt"
 import jwt, { type JwtPayload } from "jsonwebtoken"
 import config from "../../config/config";
 import sendResponse from "../../utility/sendResponse";
-const createUserIntoDB = async (payload:any)=>{
+import type { IUser } from "./auth.interface";
+const createUserIntoDB = async (payload:IUser)=>{
     const { name, email, password, role } = payload
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
