@@ -6,7 +6,7 @@ const postIssues = async (req: Request, res: Response) => {
     try {
         const reporter_id = (req as any).user.id;
 
-        const issue = await issueService.createIssueIntoDB({...req.body, reporter_id});
+        const issue = await issueService.createIssueIntoDB({ ...req.body, reporter_id });
 
         sendResponse(res, {
             statusCode: 201,
@@ -25,34 +25,59 @@ const postIssues = async (req: Request, res: Response) => {
     }
 };
 const getAllIssues = async (req: Request, res: Response) => {
-  try {
-    const sort = req.query.sort as string || "newest";
-    const type = req.query.type as string;
-    const status = req.query.status as string;
+    try {
+        const sort = req.query.sort as string || "newest";
+        const type = req.query.type as string;
+        const status = req.query.status as string;
 
-    const issues = await issueService.getAllIssuesFromDB(sort, type, status);
+        const issues = await issueService.getAllIssuesFromDB(sort, type, status);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Issues retrieved successfully",
+            data: issues,
+        });
+    } catch (error) {
+        const err = error as Error;
+        sendResponse(res, {
+            statusCode: 500,
+            success: false,
+            message: "Failed to retrieve issues",
+            error: err.message,
+        });
+    }
+};
+
+const getSingleIssue = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const issue = await issueService.getSingleIssueFromDB(id as string);
+
+    if (!issue) {
+      return sendResponse(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue NOT found",
+      });
+    }
 
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Issues retrieved successfully",
-      data: issues,
+      message: "Issue Found",
+      data: issue,
     });
   } catch (error) {
     const err = error as Error;
     sendResponse(res, {
       statusCode: 500,
       success: false,
-      message: "Failed to retrieve issues",
+      message: "Failed to retrieve issue",
       error: err.message,
     });
   }
 };
-
-const getSingleIssue = ()=>{
-
-}
-
 export const issuesController = {
     postIssues,
     getAllIssues,

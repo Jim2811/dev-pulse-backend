@@ -56,8 +56,11 @@ const getAllIssuesFromDB = async (sort: string, type?: string, status?: string) 
             `SELECT id, name, role FROM users WHERE id=$1`,
             [issue.reporter_id]
         );
+
+        const { reporter_id, ...issueWithoutReporterId } = issue;
+
         issues.push({
-            ...issue,
+            ...issueWithoutReporterId,
             reporter: reporterData.rows[0],
         });
     }
@@ -66,7 +69,34 @@ const getAllIssuesFromDB = async (sort: string, type?: string, status?: string) 
 };
 
 
+const getSingleIssueFromDB = async (id: string) => {
+  const result = await pool.query(
+    `SELECT * FROM issues WHERE id=$1`,
+    [id]
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const issue = result.rows[0];
+
+  const reporterData = await pool.query(
+    `SELECT id, name, role FROM users WHERE id=$1`,
+    [issue.reporter_id]
+  );
+
+  const { reporter_id, ...issueWithoutReporterId } = issue;
+
+  return {
+    ...issueWithoutReporterId,
+    reporter: reporterData.rows[0],
+  };
+};
+
+
 export const issueService = {
     createIssueIntoDB,
-    getAllIssuesFromDB
+    getAllIssuesFromDB,
+    getSingleIssueFromDB
 };
