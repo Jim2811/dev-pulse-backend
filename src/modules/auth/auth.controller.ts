@@ -27,33 +27,42 @@ const signUp = async (req: Request, res: Response) => {
 }
 
 const login = async (req: Request, res: Response) => {
-    try {
-        const result = await authService.loginUser(req.body)
-        res.cookie("refreshToken", refreshToken, {
-            secure: false,
-            httpOnly: true,
-            sameSite: 'lax'
-        })
+  try {
+    const { accessToken, refreshToken, user } = await authService.loginUser(req.body);
 
-        sendResponse(res,
-            {
-                "statusCode": 200,
-                "success": true,
-                "message": "Login Success",
-                'data': result
-            })
-    }
-    catch (error) {
-        const err = error as Error
-        sendResponse(res,
-            {
-                "statusCode": 404,
-                "success": false,
-                "message": err.message,
-                "error": err,
-            })
-    }
-}
+    res.cookie("refreshToken", refreshToken, {
+      secure: false,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Login successful",
+      data: {
+        token: accessToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+        },
+      },
+    });
+  } catch (error) {
+    const err = error as Error;
+    sendResponse(res, {
+      statusCode: 401,
+      success: false,
+      message: "Login failed",
+      error: err.message,
+    });
+  }
+};
+
 const refreshToken = async (req: Request, res: Response)=>{
     
     try {
