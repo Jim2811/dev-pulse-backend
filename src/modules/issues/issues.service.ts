@@ -1,5 +1,5 @@
 import { pool } from "../../db";
-import type { IIssue } from "./issues.interface";
+import type { IIssue, IUpdateIssue } from "./issues.interface";
 
 
 const createIssueIntoDB = async (payload: IIssue) => {
@@ -70,33 +70,72 @@ const getAllIssuesFromDB = async (sort: string, type?: string, status?: string) 
 
 
 const getSingleIssueFromDB = async (id: string) => {
-  const result = await pool.query(
-    `SELECT * FROM issues WHERE id=$1`,
-    [id]
-  );
+    const result = await pool.query(
+        `SELECT * FROM issues WHERE id=$1`,
+        [id]
+    );
 
-  if (result.rows.length === 0) {
-    return null;
-  }
+    if (result.rows.length === 0) {
+        return null;
+    }
 
-  const issue = result.rows[0];
+    const issue = result.rows[0];
 
-  const reporterData = await pool.query(
-    `SELECT id, name, role FROM users WHERE id=$1`,
-    [issue.reporter_id]
-  );
+    const reporterData = await pool.query(
+        `SELECT id, name, role FROM users WHERE id=$1`,
+        [issue.reporter_id]
+    );
 
-  const { reporter_id, ...issueWithoutReporterId } = issue;
+    const { reporter_id, ...issueWithoutReporterId } = issue;
 
-  return {
-    ...issueWithoutReporterId,
-    reporter: reporterData.rows[0],
-  };
+    return {
+        ...issueWithoutReporterId,
+        reporter: reporterData.rows[0],
+    };
+};
+
+const updateIssueInDB = async (
+    id: string,
+    payload: IUpdateIssue,
+    user: { id: string; role: string }
+) => {
+
+    const result = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
+    if (result.rows.length === 0) {
+        throw new Error("Issue not found");
+    }
+
+    const issue = result.rows[0];
+
+    if (user.role === "contributor") {
+        if (issue.reporter_id !== user.id) {
+            throw new Error("Forbidden: You can only update your own issue");
+        }
+        if (issue.status !== "open") {
+            throw new Error("Conflict: You can only update when status is open");
+        }
+    }
+
+    const updated = await pool.query(
+        `
+    UPDATE issues
+    SET title = COALESCE($1, title),
+        description = COALESCE($2, description),
+        type = COALESCE($3, type),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id=$4
+    RETURNING *
+    `,
+        [payload.title, payload.description, payload.type, id]
+    );
+
+    return updated.rows[0];
 };
 
 
 export const issueService = {
     createIssueIntoDB,
     getAllIssuesFromDB,
-    getSingleIssueFromDB
+    getSingleIssueFromDB,
+    updateIssueInDB
 };

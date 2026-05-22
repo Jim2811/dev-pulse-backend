@@ -50,36 +50,75 @@ const getAllIssues = async (req: Request, res: Response) => {
 };
 
 const getSingleIssue = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const issue = await issueService.getSingleIssueFromDB(id as string);
+    try {
+        const { id } = req.params;
+        const issue = await issueService.getSingleIssueFromDB(id as string);
 
-    if (!issue) {
-      return sendResponse(res, {
-        statusCode: 404,
-        success: false,
-        message: "Issue NOT found",
-      });
+        if (!issue) {
+            return sendResponse(res, {
+                statusCode: 404,
+                success: false,
+                message: "Issue NOT found",
+            });
+        }
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Issue Found",
+            data: issue,
+        });
+    } catch (error) {
+        const err = error as Error;
+        sendResponse(res, {
+            statusCode: 500,
+            success: false,
+            message: "Failed to retrieve issue",
+            error: err.message,
+        });
     }
-
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Issue Found",
-      data: issue,
-    });
-  } catch (error) {
-    const err = error as Error;
-    sendResponse(res, {
-      statusCode: 500,
-      success: false,
-      message: "Failed to retrieve issue",
-      error: err.message,
-    });
-  }
 };
+
+const updateIssue = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { title, description, type } = req.body;
+        const user = (req as any).user;
+
+        const updatedIssue = await issueService.updateIssueInDB(
+            id as string,
+            { title, description, type },
+            user
+        );
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Issue updated successfully",
+            data: updatedIssue,
+        });
+    } catch (error) {
+        const err = error as Error;
+        let statusCode = 500;
+
+        if (err.message.includes("not found")) statusCode = 404;
+        else if (err.message.includes("Forbidden")) statusCode = 403;
+        else if (err.message.includes("Conflict")) statusCode = 409;
+
+        sendResponse(res, {
+            statusCode,
+            success: false,
+            message: "Failed to update issue",
+            error: err.message,
+        });
+    }
+};
+
+
+
 export const issuesController = {
     postIssues,
     getAllIssues,
-    getSingleIssue
+    getSingleIssue,
+    updateIssue
 }

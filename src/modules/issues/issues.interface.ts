@@ -7,3 +7,9 @@ export interface IIssue {
   reporter_id: number;
   created_at?: Date;
 }
+
+export interface IUpdateIssue{
+  title?: string;
+  description?: string;
+  type?: "bug" | "feature_request"
+}

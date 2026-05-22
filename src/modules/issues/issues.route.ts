@@ -6,4 +6,5 @@ const router = Router()
 router.post('/', authMiddleware("contributor","maintainer"),issuesController.postIssues)
 router.get('/', issuesController.getAllIssues )
 router.get('/:id', issuesController.getSingleIssue )
+router.patch('/:id',  authMiddleware("maintainer","contributor"), issuesController.updateIssue )
 export const issuesRoute = router
