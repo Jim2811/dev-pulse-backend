@@ -24,6 +24,37 @@ const postIssues = async (req: Request, res: Response) => {
         });
     }
 };
+const getAllIssues = async (req: Request, res: Response) => {
+  try {
+    const sort = req.query.sort as string || "newest";
+    const type = req.query.type as string;
+    const status = req.query.status as string;
+
+    const issues = await issueService.getAllIssuesFromDB(sort, type, status);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issues retrieved successfully",
+      data: issues,
+    });
+  } catch (error) {
+    const err = error as Error;
+    sendResponse(res, {
+      statusCode: 500,
+      success: false,
+      message: "Failed to retrieve issues",
+      error: err.message,
+    });
+  }
+};
+
+const getSingleIssue = ()=>{
+
+}
+
 export const issuesController = {
-    postIssues
+    postIssues,
+    getAllIssues,
+    getSingleIssue
 }
