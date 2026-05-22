@@ -3,6 +3,7 @@ import cors from "cors";
 import { authRoute } from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
 import { issuesRoute } from "./modules/issues/issues.route";
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
 
 
 
@@ -11,9 +12,10 @@ const app: Application = express();
 app.use(cors()); 
 app.use(express.json());
 app.use(cookieParser());
+app.use(globalErrorHandler);
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
-    message: "This is home"
+    message: "DevPulse"
   });
 });
 
