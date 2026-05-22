@@ -1,13 +1,15 @@
 import { pool } from "../../db";
+import bcrypt from "bcrypt"
 const createUserIntoDB = async (payload:any)=>{
     const { name, email, password, role } = payload
+    const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `
       INSERT INTO users(name, email, password, role)
       VALUES($1, $2, $3,  COALESCE($4, 'contributor'))
       RETURNING *
       `,
-      [name, email, password, role]
+      [name, email, hashedPassword, role]
     )
     delete result.rows[0].password
     return result
@@ -19,7 +21,8 @@ const loginUser = async (payload: {email:string, password:string})=>{
         `, [email])
 
     const user = userData.rows[0]
-    if (!user || password != user.password) {
+    const matchPassword = await bcrypt.compare(password, user.password)
+    if (!user || !matchPassword) {
         throw new Error("Invalid Credentials")
     }
     return user
