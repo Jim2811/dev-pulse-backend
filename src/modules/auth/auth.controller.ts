@@ -8,7 +8,7 @@ const signUp = async (req: Request, res:Response) => {
         sendResponse(res, {
             statusCode:201,
             success: true,
-            message: "created successfully",
+            message: "Registration successfull",
             data: result.rows[0]
         })
         // console.log(result)
@@ -19,13 +19,37 @@ const signUp = async (req: Request, res:Response) => {
             {   
                 "statusCode": 500,
                 "success": false,
-                "message": "Error description",
-                "error": err.message,
+                "message": err.message,
+                "error": err,
             })
             console.log(err)
     }
 }
 
+const login = async (req:Request, res: Response)=>{
+    try{
+        const result = await authService.loginUser(req.body)
+        sendResponse(res,
+            {   
+                "statusCode": 200,
+                "success": false,
+                "message": "Login Success",
+                'data': result
+            })
+    }
+    catch(error){
+        const err = error as Error
+        sendResponse(res,
+            {   
+                "statusCode": 404,
+                "success": false,
+                "message": err.message,
+                "error": err,
+            })
+    }
+}
+
 export const authController = {
-    signUp
+    signUp,
+    login
 }

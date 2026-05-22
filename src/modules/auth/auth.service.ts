@@ -12,6 +12,19 @@ const createUserIntoDB = async (payload:any)=>{
     delete result.rows[0].password
     return result
 }
+const loginUser = async (payload: {email:string, password:string})=>{
+    const {email, password} = payload
+    const userData = await pool.query(`
+            SELECT * FROM users WHERE email=$1
+        `, [email])
+
+    const user = userData.rows[0]
+    if (!user || password != user.password) {
+        throw new Error("Invalid Credentials")
+    }
+    return user
+}
 export const authService = {
-    createUserIntoDB
+    createUserIntoDB,
+    loginUser
 }
