@@ -1,5 +1,8 @@
 import { pool } from "../../db";
 import bcrypt from "bcrypt"
+import jwt, { type JwtPayload } from "jsonwebtoken"
+import config from "../../config/config";
+import sendResponse from "../../utility/sendResponse";
 const createUserIntoDB = async (payload:any)=>{
     const { name, email, password, role } = payload
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -25,9 +28,58 @@ const loginUser = async (payload: {email:string, password:string})=>{
     if (!user || !matchPassword) {
         throw new Error("Invalid Credentials")
     }
-    return user
+    const jwtPayload = {
+        id: user.id,
+        name:user.name,
+        email:user.email,
+        role: user.role
+    }
+    const accessToken = jwt.sign(jwtPayload, config.jwtSecret as string, {
+        expiresIn:"1D"
+    })
+    const refreshToken = jwt.sign(jwtPayload, config.refreshSecret as string, {
+        expiresIn:"15D"
+    })
+    return {accessToken, refreshToken}
+}
+
+const generateRefreshToken = async(token: string)=>{
+
+      if (!token) {
+       throw new Error("Unauthorized access")
+      }
+
+      const decode = jwt.verify(
+        token,
+        config.refreshSecret as string
+      ) as JwtPayload
+
+      const userData = await pool.query(
+        `
+        SELECT * FROM users WHERE email=$1
+        `,
+        [decode.email]
+      )
+
+      const user = userData.rows[0]
+
+      if (userData.rows.length === 0) {
+        throw new Error("User not found")
+      }
+      const jwtPayload = {
+        id: user.id,
+        name:user.name,
+        email:user.email,
+        role: user.role,
+        isActive: user.isActive
+    }
+      const accessToken = jwt.sign(jwtPayload, config.jwtSecret as string, {
+        expiresIn:"1D"
+    })
+    return {accessToken}
 }
 export const authService = {
     createUserIntoDB,
-    loginUser
+    loginUser,
+    generateRefreshToken
 }
