@@ -2,7 +2,7 @@
 node_modules/
 
 # build files
-dist/
+
 build/
 
 # environment variables
@@ -41,3 +41,4 @@ coverage/
 # temporary files
 tmp/
 temp/
+.vercel

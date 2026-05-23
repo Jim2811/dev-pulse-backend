@@ -37,9 +37,11 @@
     // "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    "moduleResolution": "bundler",
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": []
 }
